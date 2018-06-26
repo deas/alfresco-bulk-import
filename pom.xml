@@ -10,11 +10,11 @@
   <name>Bulk Import Tool - Parent POM</name>
   <description>Bulk Import Tool for Alfresco v5.x.</description>
 
-  <parent>
-    <groupId>org.alfresco.maven</groupId>
-    <artifactId>alfresco-sdk-parent</artifactId>
-    <version>2.2.0</version>
-  </parent>
+  <properties>
+    <alfresco.groupId>org.alfresco</alfresco.groupId>
+    <!--alfresco.platform.version>5.2.f</alfresco.platform.version-->
+    <alfresco.platform.version>6.0.5-ea</alfresco.platform.version>
+  </properties>
 
   <licenses>
     <license>
@@ -47,8 +47,9 @@
     <dependencies>
       <dependency>
         <groupId>${alfresco.groupId}</groupId>
-        <artifactId>alfresco-platform-distribution</artifactId>
-        <version>${alfresco.version}</version>
+        <artifactId>acs-community-packaging</artifactId>
+        <!--artifactId>alfresco-platform-distribution</artifactId-->
+        <version>${alfresco.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -76,6 +77,35 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>alfresco-public</id>
+      <url>https://artifacts.alfresco.com/nexus/content/groups/public</url>
+    </repository>
+    <repository>
+      <id>alfresco-public-snapshots</id>
+      <url>https://artifacts.alfresco.com/nexus/content/groups/public-snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>alfresco-plugin-public</id>
+      <url>https://artifacts.alfresco.com/nexus/content/groups/public</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>alfresco-plugin-public-snapshots</id>
+      <url>https://artifacts.alfresco.com/nexus/content/groups/public-snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
   <modules>
     <module>api</module>

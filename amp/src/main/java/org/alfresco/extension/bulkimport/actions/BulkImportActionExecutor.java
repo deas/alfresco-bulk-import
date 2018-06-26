@@ -19,23 +19,27 @@
 
 package org.alfresco.extension.bulkimport.actions;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.alfresco.extension.bulkimport.BulkImporter;
+import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource;
 import org.alfresco.repo.action.ParameterDefinitionImpl;
 import org.alfresco.repo.action.executer.ActionExecuterAbstractBase;
 import org.alfresco.service.cmr.action.Action;
 import org.alfresco.service.cmr.action.ParameterDefinition;
 import org.alfresco.service.cmr.dictionary.DataTypeDefinition;
 import org.alfresco.service.cmr.repository.NodeRef;
-import org.alfresco.extension.bulkimport.BulkImporter;
-import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+// import com.fasterxml.jackson.core.
+// import org.codehaus.jackson.JsonParseException;
+// import org.codehaus.jackson.map.JsonMappingException;
+// import org.codehaus.jackson.map.ObjectMapper;
+// import org.codehaus.jackson.type.TypeReference;
 
 
 /**
@@ -127,7 +131,7 @@ public class BulkImportActionExecutor
     
     
     private final Map<String, List<String>> parseParametersJson(final String parametersJson)
-        throws IOException, JsonMappingException, JsonParseException
+        throws IOException
     {
         Map<String, List<String>>                         result        = null;
         final ObjectMapper                                mapper        = new ObjectMapper();

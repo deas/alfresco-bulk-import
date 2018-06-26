@@ -3,9 +3,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.alfresco.extension</groupId>
+  <groupId>de.contentreich.alfresco</groupId>
   <artifactId>alfresco-bulk-import</artifactId>
-  <packaging>amp</packaging>
+  <packaging>jar</packaging>
   <name>Bulk Import Tool - AMP</name>
   <description>Bulk Import Tool AMP project.</description>
 
@@ -27,5 +27,29 @@
       <version>${project.version}</version>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>org.alfresco.extension:alfresco-bulk-import-api</include>
+                </includes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
 
+  </build>
 </project>
