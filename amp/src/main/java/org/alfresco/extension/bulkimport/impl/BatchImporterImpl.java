@@ -19,18 +19,10 @@
 
 package org.alfresco.extension.bulkimport.impl;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.alfresco.service.cmr.version.Version;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import org.alfresco.extension.bulkimport.BulkImportStatus;
+import org.alfresco.extension.bulkimport.source.BulkImportContentProperty;
+import org.alfresco.extension.bulkimport.source.BulkImportItem;
+import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -39,25 +31,24 @@ import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.repo.transaction.RetryingTransactionHelper.RetryingTransactionCallback;
 import org.alfresco.repo.version.VersionModel;
 import org.alfresco.service.ServiceRegistry;
+import org.alfresco.service.cmr.dictionary.DataTypeDefinition;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
-import org.alfresco.service.cmr.repository.ContentService;
-import org.alfresco.service.cmr.repository.ContentWriter;
-import org.alfresco.service.cmr.repository.InvalidNodeRefException;
-import org.alfresco.service.cmr.repository.NodeRef;
-import org.alfresco.service.cmr.repository.NodeService;
-import org.alfresco.service.cmr.repository.StoreRef;
+import org.alfresco.service.cmr.repository.*;
+import org.alfresco.service.cmr.version.Version;
 import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import org.alfresco.extension.bulkimport.BulkImportStatus;
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.*;
 
-import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
+import static org.alfresco.extension.bulkimport.util.Utils.createQName;
 
 
 /**
@@ -536,16 +527,23 @@ public final class BatchImporterImpl
 
             
             // QName all the keys.  It's baffling that NodeService doesn't have a method that accepts a Map<String, Serializable>, when things like VersionService do...
-            Map<QName, Serializable> qNamedMetadata = new HashMap<>(metadata.size());
-            
+            Map<QName, Serializable>              qNamedMetadata = new HashMap<>();
+            Map<QName, BulkImportContentProperty> contentMetadata = new HashMap<>();
+
             for (final String key : metadata.keySet())
             {
                 if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
                 QName        keyQName = createQName(serviceRegistry, key);
                 Serializable value    = metadata.get(key);
-                
-                qNamedMetadata.put(keyQName, value);
+                if (DataTypeDefinition.CONTENT.equals(serviceRegistry.getDictionaryService().getProperty(keyQName).getDataType().getName())) {
+                    BulkImportContentProperty bulkImportContentProperty = version.createBulkImportContentProperty(value);
+                    if (bulkImportContentProperty != null) {
+                        contentMetadata.put(keyQName, bulkImportContentProperty);
+                    }
+                } else {
+                    qNamedMetadata.put(keyQName, value);
+                }
             }
 
             if (dryRun)
@@ -560,6 +558,12 @@ public final class BatchImporterImpl
                     if (trace(log)) trace(log, "Adding the following properties to '" + String.valueOf(nodeRef) +
                                                "':\n" + Arrays.toString(qNamedMetadata.entrySet().toArray()));
                     nodeService.addProperties(nodeRef, qNamedMetadata);
+                    if (!contentMetadata.isEmpty()) {
+                        for (Map.Entry<QName, BulkImportContentProperty> contentProp: contentMetadata.entrySet()) {
+                            ContentWriter writer = contentService.getWriter(nodeRef, contentProp.getKey(), true);
+                            contentProp.getValue().putContent(writer);
+                        }
+                    }
                 }
                 catch (final InvalidNodeRefException inre)
                 {

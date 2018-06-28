@@ -20,8 +20,10 @@
 
 package org.alfresco.extension.bulkimport.source.sample;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
+import org.alfresco.extension.bulkimport.source.BulkImportContentProperty;
 import org.alfresco.model.ContentModel;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
@@ -74,6 +76,11 @@ public final class SampleSourceImportItemVersion
         writer.setMimetype("text/plain");
         writer.setEncoding("UTF8");
         writer.putContent(contentReference);
+    }
+
+    @Override
+    public BulkImportContentProperty createBulkImportContentProperty(Serializable value) {
+        return null;
     }
 
 }

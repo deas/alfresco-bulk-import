@@ -20,51 +20,16 @@
 
 package org.alfresco.extension.bulkimport.source;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Set;
-
 import org.alfresco.service.cmr.repository.ContentWriter;
 
 /**
  * This interface identifies a property of type cm:content.
- *
+ * 
  * @author Andreas Steffan (a.steffan@contentreich.de)
  *
  */
-public interface BulkImportItemVersion
+public interface BulkImportContentProperty
 {
-    /**
-     * Constant to represent an "unversioned" (i.e. HEAD) version.
-     */
-    public final static BigDecimal VERSION_HEAD = BigDecimal.valueOf(Long.MAX_VALUE);
-    
-    /**
-     * @return Returns the decimal representation of the version number <i>(can be null if this version doesn't have a version number)</i>.
-     */
-    BigDecimal getVersionNumber();
-
-    /**
-     * @return Returns the comment for this version, if any <i>(can be null if this version doesn't have a version comment)</i>.
-     */
-    String getVersionComment();
-
-    /**
-     * @return The type for this version <i>(may be null, but must be a valid Alfresco type if not null)</i>.
-     */
-    String getType();
-    
-    /**
-     * @return The aspect(s) for this version <i>(may be null or empty)</i>.
-     */
-    Set<String> getAspects();
-    
-    /**
-     * @return True if this version has content, false if not.
-     */
-    boolean hasContent();
-    
     /**
      * @return A human-readable reference to the source of the content (used in error messages) <i>(may be null if hasContent() = false)</i>.
      */
@@ -78,7 +43,7 @@ public interface BulkImportItemVersion
     /**
      * @return True if the content is already in-place (in which case the content url property must be returned from the <code>getMetadata</code> call).
      */
-    boolean contentIsInPlace();
+    // boolean contentIsInPlace();
     
     /**
      * Called when the content of this version is ready to be streamed into the repository.
@@ -93,21 +58,4 @@ public interface BulkImportItemVersion
      * @param writer The ContentWriter to use for this version <i>(will not be null)</i>.
      */
     void putContent(ContentWriter writer);
-    
-    /**
-     * @return True if this version has metadata, false if not.
-     */
-    boolean hasMetadata();
-
-    /**
-     * @return A human-readable reference to the source of the metadata (used in error messages) <i>(may be null if hasMetadata() = false)</i>.
-     */
-    String getMetadataSource();
-    
-    /**
-     * @return The metadata of this version, if any <i>(may return null or empty)</i>.
-     */
-    Map<String,Serializable> getMetadata();
-
-    BulkImportContentProperty createBulkImportContentProperty(Serializable val);
 }

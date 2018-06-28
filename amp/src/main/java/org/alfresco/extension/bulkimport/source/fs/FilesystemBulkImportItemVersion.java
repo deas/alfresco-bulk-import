@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import org.alfresco.extension.bulkimport.source.BulkImportContentProperty;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -155,6 +156,17 @@ public final class FilesystemBulkImportItemVersion
     {
         loadMetadataIfNecessary();
         return(cachedMetadata.getProperties());
+    }
+
+    @Override
+    public BulkImportContentProperty createBulkImportContentProperty(Serializable value) {
+        String path        = new File(getContentSource()).getParent() + File.separator + value;
+        File   contentFile = new File(path);
+        if (contentFile.exists()) {
+            return new FilesystemContentProperty(contentFile);
+        } else {
+            return null;
+        }
     }
 
     /**
