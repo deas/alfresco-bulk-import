@@ -19,8 +19,6 @@
 
 package org.alfresco.extension.bulkimport.actions;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.alfresco.extension.bulkimport.BulkImporter;
 import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource;
 import org.alfresco.repo.action.ParameterDefinitionImpl;
@@ -30,17 +28,10 @@ import org.alfresco.service.cmr.action.ParameterDefinition;
 import org.alfresco.service.cmr.dictionary.DataTypeDefinition;
 import org.alfresco.service.cmr.repository.NodeRef;
 
-import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-// import com.fasterxml.jackson.core.
-// import org.codehaus.jackson.JsonParseException;
-// import org.codehaus.jackson.map.JsonMappingException;
-// import org.codehaus.jackson.map.ObjectMapper;
-// import org.codehaus.jackson.type.TypeReference;
-
 
 /**
  * This class exposes the bulk import functionality as a repository action called
@@ -68,10 +59,30 @@ public class BulkImportActionExecutor
     public final static String PARAM_TARGET         = "target-noderef";
     
     private final static String DEFAULT_SOURCE_BEAN_ID = FilesystemBulkImportSource.IMPORT_SOURCE_NAME;
-    
+    private static Map<String, Class> FACTORIES = new HashMap<String, Class>();
     
     private final BulkImporter bulkImport;
-    
+
+    static {
+        String typeShortName   = "TypeReference";
+        String mapperShortName = "ObjectMapper";
+        FACTORIES.put(typeShortName, getClass(typeShortName, "com.fasterxml.jackson.core.type", "org.codehaus.jackson.type"));
+        FACTORIES.put(mapperShortName, getClass(mapperShortName, "com.fasterxml.jackson.databind","org.codehaus.jackson.map"));
+    }
+
+    static Class getClass(String shortName, String pkg1, String pkg2) {
+        Class clazz;
+        try {
+            clazz = Class.forName(pkg1 + "." + shortName);
+        } catch (ClassNotFoundException e) {
+            try {
+                clazz = Class.forName(pkg2+ "." + shortName);
+            } catch (ClassNotFoundException e1) {
+                throw new RuntimeException("Class " + shortName + " not found in package " + pkg1 + " or " + pkg2);
+            }
+        }
+        return clazz;
+    }
     
     public BulkImportActionExecutor(final BulkImporter bulkImport)
     {
@@ -116,30 +127,24 @@ public class BulkImportActionExecutor
             sourceBeanId = DEFAULT_SOURCE_BEAN_ID;
         }
         
-        try
-        {
-            parameters = parseParametersJson(parametersJson);
-        }
-        catch (final Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-        
+        parameters = parseParametersJson(parametersJson);
+
         // Initiate the import
         bulkImport.start(sourceBeanId, parameters, target);
     }
     
     
-    private final Map<String, List<String>> parseParametersJson(final String parametersJson)
-        throws IOException
-    {
-        Map<String, List<String>>                         result        = null;
-        final ObjectMapper                                mapper        = new ObjectMapper();
-        final TypeReference<HashMap<String,List<String>>> typeReference = new TypeReference<HashMap<String,List<String>>>() {};
-        
-        result = mapper.readValue(parametersJson, typeReference);
-
-        return(result);
+    private final Map<String, List<String>> parseParametersJson(final String parametersJson) {
+        Class mapperClass        = FACTORIES.get("ObjectMapper");
+        Class typeReferenceClass = FACTORIES.get("TypeReference");
+        try {
+            final Object mapper        = mapperClass.newInstance();
+            final Object typeReference = typeReferenceClass.newInstance();
+            Method       method        = mapperClass.getMethod("readValue", String.class, typeReferenceClass);
+            return ((Map<String, List<String>>) method.invoke(mapper, parametersJson, typeReference));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
